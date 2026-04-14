@@ -1,6 +1,0 @@
-name = "kv-file-share"
-compatibility_date = "2025-01-01"
-
-[[kv_namespaces]]
-binding = "FILE_KV"
-id = "93e50cfd64524a8abaaeae4070338855"
