@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>文件下载</title>
+<div style="max-width:500px;margin:40px auto">
+  <h2>📥 文件下载</h2>
+  <p>文件名：<span id="name"></span></p>
+  <p>下载地址：</p>
+  <input id="url" readonly style="width:100%">
+  <button onclick="copy()">复制地址</button><br><br>
+  <a id="down" download style="background:#0070f3;color:white;padding:10px 20px;text-decoration:none">
+    直接下载
+  </a>
+</div>
+
+<script>
+const id = location.pathname.split("/")[2];
+fetch(`/api/${id}`).then(r=>r.json()).then(d=>{
+  document.getElementById("name").textContent = d.name;
+  const u = `data:${d.type};base64,${d.base64}`;
+  document.getElementById("url").value = u;
+  document.getElementById("down").href = u;
+});
+
+function copy(){
+  navigator.clipboard.writeText(document.getElementById("url").value);
+  alert("已复制");
+}
+</script>
