@@ -10,7 +10,7 @@ export async function onRequestPost(context) {
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    await env.ktv.put(`file:${key}`, JSON.stringify({
+    await env.FILE_KV.put(`file:${key}`, JSON.stringify({
       name: file.name,
       type: file.type,
       size: file.size,
