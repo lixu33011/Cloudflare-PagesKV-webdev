@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>KV 文件分享</title>
+<input type="file" id="f">
+<button onclick="up()">上传</button>
+<div id="res"></div>
+
+<script>
+async function up() {
+  const file = document.getElementById('f').files[0];
+  if (!file) return alert('选文件');
+
+  const fd = new FormData();
+  fd.append('file', file);
+
+  const r = await fetch('/api/upload', { method: 'POST', body: fd });
+  const j = await r.json();
+
+  document.getElementById('res').innerHTML = `
+    分享链接：<a href="${j.url}">${j.url}</a>
+    <br><button onclick="copy('${j.url}')">复制</button>
+  `;
+}
+
+function copy(u) {
+  navigator.clipboard.writeText(u);
+  alert('已复制');
+}
+</script>
