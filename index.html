@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
-<title>KV 文件分享</title>
-<div style="padding:30px;max-width:500px;margin:auto">
+<title>文件分享</title>
+<div style="max-width:500px;margin:40px auto">
   <h2>📤 上传文件</h2>
-  <input type="file" id="file"><br><br>
-  <button onclick="upload()">上传并生成分享链接</button>
-  <div id="result" style="margin-top:20px"></div>
+  <input type="file" id="file">
+  <button onclick="upload()">上传</button>
+  <div id="result"></div>
 </div>
 
 <script>
 async function upload() {
-  const f = document.getElementById('file').files[0];
-  if (!f) return alert('请选择文件');
+  const f = document.getElementById("file").files[0];
+  if (!f) return alert("请选择文件");
 
   const fd = new FormData();
-  fd.append('file', f);
+  fd.append("file", f);
 
-  const res = await fetch('/api/upload', { method: 'POST', body: fd });
+  const res = await fetch("/api/upload", {
+    method: "POST",
+    body: fd
+  });
+
   const data = await res.json();
-
-  document.getElementById('result').innerHTML = `
-    <h3>✅ 上传成功</h3>
-    分享链接：<br>
-    <input type="text" value="${data.shareUrl}" style="width:100%;padding:8px">
-    <button onclick="copy('${data.shareUrl}')">复制链接</button>
+  document.getElementById("result").innerHTML = `
+    分享链接：<input value="${data.shareUrl}" style="width:100%">
+    <button onclick="copy('${data.shareUrl}')">复制</button>
   `;
 }
 
-function copy(text) {
-  navigator.clipboard.writeText(text);
-  alert('已复制');
+function copy(t) {
+  navigator.clipboard.writeText(t);
+  alert("已复制");
 }
 </script>
