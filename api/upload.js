@@ -1,27 +1,39 @@
 export async function onRequestPost(context) {
-  const { request, env } = context;
-
   try {
+    const { request, env } = context;
+
     const formData = await request.formData();
     const file = formData.get('file');
-    if (!file) return Response.json({ error: 'no file' }, { status: 400 });
+
+    if (!file) {
+      return new Response(JSON.stringify({ error: 'no file' }), {
+        headers: { 'Content-Type': 'application/json' },
+        status: 400
+      });
+    }
 
     const key = Math.random().toString(36).substring(2, 10);
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    await env.FILE_KV.put(`file:${key}`, JSON.stringify({
+    await env.ktv.put(`file:${key}`, JSON.stringify({
       name: file.name,
       type: file.type,
       size: file.size,
-      base64,
+      base64: base64
     }));
 
-    return Response.json({
+    return new Response(JSON.stringify({
       key,
       shareUrl: `${new URL(request.url).origin}/share/${key}`
+    }), {
+      headers: { 'Content-Type': 'application/json' }
     });
+
   } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: e.message }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 500
+    });
   }
 }
