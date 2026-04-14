@@ -5,7 +5,10 @@ export async function onRequestPost(context) {
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ error: "请选择文件" }, { status: 400 });
+      return new Response(JSON.stringify({ error: "no file" }), {
+        headers: { "Content-Type": "application/json" },
+        status: 400
+      });
     }
 
     const key = Math.random().toString(36).slice(2, 10);
@@ -19,12 +22,16 @@ export async function onRequestPost(context) {
       base64
     }));
 
-    return Response.json({
+    return new Response(JSON.stringify({
       key,
       shareUrl: `${new URL(request.url).origin}/share/${key}`
+    }), {
+      headers: { "Content-Type": "application/json" }
     });
-
   } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+    return new Response(JSON.stringify({ error: e.message }), {
+      headers: { "Content-Type": "application/json" },
+      status: 500
+    });
   }
 }
