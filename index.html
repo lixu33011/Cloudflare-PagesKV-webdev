@@ -1,35 +1,89 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<title>文件分享</title>
-<div style="max-width:500px;margin:40px auto">
-  <h2>📤 上传文件</h2>
-  <input type="file" id="file">
-  <button onclick="upload()">上传</button>
-  <div id="result"></div>
-</div>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>文件上传分享</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, sans-serif;
+        }
+        body {
+            max-width: 500px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 6px 0;
+            width: 100%;
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h2>📤 上传文件（直接生成下载链接）</h2>
+    <input type="file" id="file">
+    <button onclick="upload()">上传并生成链接</button>
+
+    <div id="result"></div>
 
 <script>
 async function upload() {
-  const f = document.getElementById("file").files[0];
-  if (!f) return alert("请选择文件");
+    const f = document.getElementById("file").files[0];
+    if (!f) {
+        alert("请选择文件");
+        return;
+    }
 
-  const fd = new FormData();
-  fd.append("file", f);
+    const fd = new FormData();
+    fd.append("file", f);
 
-  const res = await fetch("/api/upload", {
-    method: "POST",
-    body: fd
-  });
+    try {
+        const res = await fetch("/api/upload", {
+            method: "POST",
+            body: fd
+        });
 
-  const data = await res.json();
-  document.getElementById("result").innerHTML = `
-    分享链接：<input value="${data.shareUrl}" style="width:100%">
-    <button onclick="copy('${data.shareUrl}')">复制</button>
-  `;
+        const data = await res.json();
+
+        if (data.error) {
+            alert("错误：" + data.error);
+            return;
+        }
+
+        // 直接显示【下载链接】，点了就下载，不会跳主页
+        document.getElementById("result").innerHTML = `
+            <p>上传成功！</p>
+            下载链接：<br>
+            <input type="text" value="${data.downloadUrl}" readonly style="width:100%;padding:6px;">
+            <br>
+            <button onclick="copyUrl('${data.downloadUrl}')">复制链接</button>
+            <br><br>
+            <a href="${data.downloadUrl}" target="_blank">
+                <button style="background: #009955;">直接打开下载</button>
+            </a>
+        `;
+
+    } catch (e) {
+        alert("上传失败：" + e.toString());
+    }
 }
 
-function copy(t) {
-  navigator.clipboard.writeText(t);
-  alert("已复制");
+function copyUrl(url) {
+    navigator.clipboard.writeText(url).then(() => {
+        alert("链接已复制");
+    });
 }
 </script>
+</body>
+</html>
