@@ -1,11 +1,11 @@
 export async function onRequestPost(context) {
   try {
-    const { request, env, FILE_KV } = context;
+    const { request, env } = context;
     const formData = await request.formData();
     const file = formData.get("file");
 
     if (!file) {
-      return Response.json({ error: "请选择文件" }, { status: 400 });
+      return Response.json({ error: "no file" }, { status: 400 });
     }
 
     const key = Math.random().toString(36).slice(2, 10);
