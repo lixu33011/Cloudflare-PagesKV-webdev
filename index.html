@@ -7,124 +7,161 @@
 *{box-sizing:border-box;font-family:system-ui,sans-serif}
 body{max-width:600px;margin:40px auto;padding:0 20px}
 input,button{width:100%;padding:10px;margin:6px 0;border-radius:6px;border:1px solid #ddd}
-button{background:#0070f3;color:white;border:none;cursor:pointer}
-#admin{background:#f8f9fa;padding:15px;border-radius:8px;margin-bottom:20px}
-#file-list{margin-top:20px}
-.item{padding:10px;border-bottom:1px solid #eee}
-.name{font-weight:bold}
-.link{color:#0070f3;word-break:break-all}
+button{cursor:pointer;border:0}
+.btn-blue{background:#0070f3;color:white}
+.btn-red{background:#ff4444;color:white}
+#admin{background:#f8f9fa;padding:15px;border-radius:8px}
+#upload-area, #file-list{margin-top:20px}
+.item{padding:12px;border-bottom:1px solid #eee}
+.name{font-weight:bold;margin-bottom:4px}
+.link{color:#0070f3;word-break:break-all;margin:6px 0}
+.buttons{display:flex;gap:8px}
 </style>
 </head>
 <body>
 
-<h2>📤 文件上传 & 管理</h2>
+<h2>📤 文件管理面板</h2>
 
-<!-- 管理员登录 -->
+<!-- 登录区 -->
 <div id="admin">
-<div id="login-box">
-<h3>管理员登录</h3>
-<input type="password" id="pwd" placeholder="请输入管理员密码">
-<button onclick="login()">登录</button>
+  <div id="login-box">
+    <h3>管理员登录</h3>
+    <input type="password" id="pwd" placeholder="输入管理员密码">
+    <button class="btn-blue" onclick="login()">登录</button>
+  </div>
+
+  <div id="admin-panel" style="display:none">
+    <!-- 已去掉提示文字 -->
+  </div>
 </div>
 
-<div id="admin-panel" style="display:none">
-<p>✅ 管理员已登录（当天有效）</p>
-<button onclick="loadList()">刷新文件列表</button>
-</div>
+<!-- 上传区域（默认隐藏） -->
+<div id="upload-area" style="display:none">
+  <h3>上传文件</h3>
+  <input type="file" id="file">
+  <button class="btn-blue" onclick="upload()">上传并生成直链</button>
+  <div id="result" style="margin-top:10px"></div>
 </div>
 
-<!-- 上传 -->
-<h3>上传文件</h3>
-<input type="file" id="file">
-<button onclick="upload()">上传并生成直链</button>
-<div id="result"></div>
-
-<!-- 文件列表 -->
-<div id="file-list"></div>
+<!-- 文件列表（默认隐藏） -->
+<div id="file-list" style="display:none"></div>
 
 <script>
 // ===================== 配置 =====================
-const ADMIN_PASSWORD = "123456"; // 你自己改密码
-const API_PREFIX = "/api";
+const ADMIN_PASSWORD = "123456"; // 自己改密码
+const API = "/api";
 
-// ===================== 当天登录判断 =====================
+// ===================== 自动登录判断 =====================
 checkLogin();
+
 function checkLogin() {
-let loginfo = JSON.parse(localStorage.getItem("admin")||"{}");
-let today = new Date().toISOString().split("T")[0];
-if(loginfo.date == today && loginfo.login == true){
-showAdmin();
-}
-}
-
-function login(){
-let p = document.getElementById("pwd").value;
-if(p == ADMIN_PASSWORD){
-let today = new Date().toISOString().split("T")[0];
-localStorage.setItem("admin", JSON.stringify({login:true, date:today}));
-showAdmin();
-alert("登录成功");
-}else{
-alert("密码错误");
-}
+  const info = JSON.parse(localStorage.getItem("admin") || "{}");
+  const today = new Date().toISOString().split("T")[0];
+  if (info.date === today && info.login === true) {
+    showAdmin();
+  }
 }
 
-function showAdmin(){
-document.getElementById("login-box").style.display = "none";
-document.getElementById("admin-panel").style.display = "block";
-loadList();
+function login() {
+  const pwd = document.getElementById("pwd").value;
+  if (pwd === ADMIN_PASSWORD) {
+    const today = new Date().toISOString().split("T")[0];
+    localStorage.setItem("admin", JSON.stringify({ login: true, date: today }));
+    showAdmin();
+  } else {
+    alert("密码错误");
+  }
+}
+
+// 登录后显示所有功能
+function showAdmin() {
+  document.getElementById("login-box").style.display = "none";
+  document.getElementById("admin-panel").style.display = "block";
+  document.getElementById("upload-area").style.display = "block";
+  document.getElementById("file-list").style.display = "block";
+  loadList();
 }
 
 // ===================== 上传 =====================
 async function upload() {
-let f = document.getElementById("file").files[0];
-if(!f){alert("请选择文件");return}
-let fd = new FormData();
-fd.append("file",f);
-try{
-let r = await fetch(API_PREFIX+"/upload", {method:"POST", body:fd});
-let data = await r.json();
-if(data.error){alert("错误："+data.error);return}
-document.getElementById("result").innerHTML = `
-<p>✅ 上传成功</p>
-链接：<div class="link">${data.downloadUrl}</div>
-<button onclick="copy('${data.downloadUrl}')">复制链接</button>
-`;
-if(document.getElementById("admin-panel").style.display=="block"){
-loadList();
-}
-}catch(e){alert("失败："+e)}
+  const file = document.getElementById("file").files[0];
+  if (!file) return alert("请选择文件");
+
+  const fd = new FormData();
+  fd.append("file", file);
+
+  try {
+    const res = await fetch(`${API}/upload`, { method: "POST", body: fd });
+    const data = await res.json();
+    if (data.error) return alert("错误：" + data.error);
+
+    document.getElementById("result").innerHTML = `
+      <p>✅ 上传成功</p>
+      <div class="link">${data.downloadUrl}</div>
+      <button class="btn-blue" onclick="copy('${data.downloadUrl}')">复制链接</button>
+    `;
+    loadList();
+  } catch (e) {
+    alert("上传失败：" + e);
+  }
 }
 
-function copy(t){
-navigator.clipboard.writeText(t);alert("已复制");
+// ===================== 复制链接 =====================
+function copy(text) {
+  navigator.clipboard.writeText(text);
+  alert("已复制");
 }
 
-// ===================== 加载所有文件 =====================
-async function loadList(){
-let listEl = document.getElementById("file-list");
-listEl.innerHTML = "加载中...";
-try{
-let r = await fetch(API_PREFIX+"/list");
-let list = await r.json();
-if(list.error){alert(list.error);return}
-if(list.length==0){listEl.innerHTML="<p>暂无文件</p>";return}
-let html = "";
-list.forEach(item=>{
-let url = location.origin + API_PREFIX +"/"+item.key;
-html+=`
-<div class="item">
-<div class="name">${item.name}</div>
-<div>${(item.size/1024).toFixed(1)} KB</div>
-<div class="link">${url}</div>
-<button onclick="copy('${url}')">复制</button>
-</div>
-`;
-});
-listEl.innerHTML = html;
-}catch(e){
-listEl.innerHTML="加载失败";
+// ===================== 文件列表 =====================
+async function loadList() {
+  const listEl = document.getElementById("file-list");
+  listEl.innerHTML = "加载中...";
+
+  try {
+    const res = await fetch(`${API}/list`);
+    const list = await res.json();
+    if (list.error) return alert(list.error);
+
+    if (list.length === 0) {
+      listEl.innerHTML = "<p>暂无文件</p>";
+      return;
+    }
+
+    let html = "";
+    list.forEach(item => {
+      const url = location.origin + `${API}/${item.key}`;
+      html += `
+        <div class="item">
+          <div class="name">${item.name}</div>
+          <div>${(item.size / 1024).toFixed(1)} KB</div>
+          <div class="link">${url}</div>
+          <div class="buttons">
+            <button class="btn-blue" onclick="copy('${url}')">复制</button>
+            <button class="btn-red" onclick="del('${item.key}')">删除</button>
+          </div>
+        </div>
+      `;
+    });
+    listEl.innerHTML = html;
+  } catch (e) {
+    listEl.innerHTML = "加载失败";
+  }
 }
+
+// ===================== 删除文件 =====================
+async function del(key) {
+  if (!confirm("确定删除？")) return;
+  try {
+    const res = await fetch(`${API}/delete/${key}`, { method: "DELETE" });
+    const data = await res.json();
+    if (data.ok) {
+      loadList();
+    } else {
+      alert("删除失败：" + data.error);
+    }
+  } catch (e) {
+    alert("删除异常");
+  }
 }
 </script>
 </body>
