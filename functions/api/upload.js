@@ -1,7 +1,7 @@
 export async function onRequestPost(context) {
-  const { request, env } = context;
-
   try {
+    const { request, env, params } = context;
+
     const formData = await request.formData();
     const file = formData.get("file");
 
@@ -13,7 +13,6 @@ export async function onRequestPost(context) {
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    // ✅ 这里正确读写 KV
     await env.FILE_KV.put(`file:${key}`, JSON.stringify({
       name: file.name,
       type: file.type,
@@ -25,8 +24,7 @@ export async function onRequestPost(context) {
       key,
       shareUrl: `${new URL(request.url).origin}/share/${key}`
     });
-
   } catch (e) {
-    return Response.json({ error: e.message }, { status: 500 });
+    return Response.json({ error: e.message, details: e.stack }, { status: 500 });
   }
 }
